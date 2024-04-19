@@ -41,16 +41,21 @@ const Home: NextPage = () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.onchange = (e) => {
-        const file = e.target.files[0];
+      const files = (e.target as HTMLInputElement).files;
+      if (files && files.length > 0) {
+        const file = files[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const arrayBuffer = event.target.result;
-                const hash = keccak256(new Uint8Array(arrayBuffer));
-                setFileHash(hash);
-            };
-            reader.readAsArrayBuffer(file);
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            if (event.target && event.target.result instanceof ArrayBuffer) {
+              const arrayBuffer = event.target.result;
+              const hash = keccak256(new Uint8Array(arrayBuffer));
+              setFileHash(hash);
+            }
+          };
+          reader.readAsArrayBuffer(file);
         }
+      }
     };
     input.click(); // Abre el diálogo de selección de archivo
   };
@@ -58,41 +63,49 @@ const Home: NextPage = () => {
   const uploadDocument = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const newName = event.target[0].value.trim();
-    const newType = event.target[1].value.trim();
-    const newOwner = event.target[2].value.trim();
+    const formData = new FormData(event.currentTarget);
+    const newName = formData.get('name');
+    const newType = formData.get('type');
+    const newOwner = formData.get('owner');
 
     // Validación básica
     if (!newName || !newType || !Hash || !newOwner) {
         setErrorMessage("Todos los campos son obligatorios y deben contener el hash del archivo.");
         return;
     }
-    const result = await writeContract({
-        abi: contract.abi,
-        address: contract.addressFuji as `0x${string}`,
-        functionName: 'uploadNewDocument',
-        args: [newName, newType, Hash, newOwner],
-    });
-    console.log('Documento subido correctamente:', result);
-    alert('Documento subido exitosamente!');
+    try {
+        const result = await writeContract({
+            abi: contract.abi,
+            address: contract.addressFuji as `0x${string}`,
+            functionName: 'uploadNewDocument',
+            args: [newName, newType, Hash, newOwner],
+        });
+        alert('Documento subido exitosamente!');
+    } catch (error) {
+        setErrorMessage("Error al subir el documento: " + error)
+    }
   }
 
   const updateDocument = async (event: FormEvent<HTMLFormElement>) => {
-    //code
-    event.preventDefault()
-    const newName = event.target[0].value;
+    event.preventDefault();
+
+    const formData = new FormData(event.currentTarget);
+    const newName = formData.get('name');
+
     writeContract({ 
       abi: contract.abi,
       address: contract.addressFuji as `0x${string}`,
       functionName: 'updateDocument',
       args: [newName, Hash],
    })
-  }
+}
+
 
   const verifyDocument = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    setName(event.target[0].value);
+    const formData = new FormData(event.currentTarget);
+    const newName = formData.get('name');
 
     if (!Name || !Hash) {
         setErrorMessage("Todos los campos son obligatorios para verificar un documento.");

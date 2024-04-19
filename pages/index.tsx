@@ -74,15 +74,18 @@ const Home: NextPage = () => {
         return;
     }
     try {
-        const result = await writeContract({
-            abi: contract.abi,
-            address: contract.addressFuji as `0x${string}`,
-            functionName: 'uploadNewDocument',
-            args: [newName, newType, Hash, newOwner],
-        });
-        alert('Documento subido exitosamente!');
+      const result = await writeContract({
+        abi: contract.abi,
+        address: contract.addressFuji as `0x${string}`,
+        functionName: 'uploadNewDocument',
+        args: [newName, newType, Hash, newOwner],
+      });
+      if (result === undefined) {
+        throw new Error('Error al subir el documento o no estas autorizado');
+      }
+      alert('Documento subido exitosamente!');
     } catch (error) {
-      setErrorMessage('Error al subir el documento o no estas autorizado');
+      setErrorMessage((error as Error).message);
     }
   }
 

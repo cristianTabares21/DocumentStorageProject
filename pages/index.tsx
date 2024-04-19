@@ -18,6 +18,8 @@ const Home: NextPage = () => {
 
   const [verificationResult, setVerificationResult] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorUpload, setErrorUpload] = useState<string | null>(null);
+  const [errorUpdate, setErrorUpdate] = useState<string | null>(null);
 
 
   const { refetch } = useReadContract({
@@ -70,7 +72,7 @@ const Home: NextPage = () => {
 
     // Validación básica
     if (!newName || !newType || !Hash || !newOwner) {
-        setErrorMessage("Todos los campos son obligatorios y deben contener el hash del archivo.");
+      setErrorUpload("Todos los campos son obligatorios.");
         return;
     }
     try {
@@ -84,8 +86,9 @@ const Home: NextPage = () => {
         throw new Error('Error al subir el documento o no estas autorizado');
       }
       alert('Documento subido exitosamente!');
+      setErrorUpload(null); // Limpiar el mensaje de error
     } catch (error) {
-      setErrorMessage((error as Error).message);
+      setErrorUpload((error as Error).message);
     }
   }
 
@@ -97,21 +100,24 @@ const Home: NextPage = () => {
 
     // Validación básica
     if (!newName || !Hash) {
-        setErrorMessage("Todos los campos son obligatorios y deben contener el hash del archivo.");
+      setErrorUpdate("Todos los campos son obligatorios.");
         return;
     }
 
     try {
-        await writeContract({ 
+        const result = await writeContract({ 
           abi: contract.abi,
           address: contract.addressFuji as `0x${string}`,
           functionName: 'updateDocument',
           args: [newName, Hash],
-       })
+       });
+       if (result === undefined) {
+        throw new Error('Error al actualizar el documento o no estas autorizado');
+      }
        alert('Documento actualizado exitosamente!');
-       setErrorMessage(null); // Limpiar el mensaje de error
+       setErrorUpdate(null); // Limpiar el mensaje de error
     } catch (error) {
-        setErrorMessage('Error al actualizar el documento o no estas autorizado');
+      setErrorUpdate((error as Error).message);
     }
   }
 
@@ -183,6 +189,9 @@ const Home: NextPage = () => {
               </div>
               <button type="submit" disabled={!Hash}>Sube el archivo</button>
           </form>
+          <div>
+              {errorUpload && <div style={{ color: 'red' }}>{errorUpload}</div>}
+          </div>
         </div>
 
         <div>
@@ -192,8 +201,11 @@ const Home: NextPage = () => {
               <label htmlFor="docName">Nombre del Documento:</label>
               <input type="text" id="docName" name="name" required />
             </div>
-            <button type="submit">Actualizar documento</button>
+            <button type="submit" disabled={!Hash}>Actualizar documento</button>
           </form>
+          <div>
+              {errorUpdate && <div style={{ color: 'red' }}>{errorUpdate}</div>}
+          </div>
         </div>
 
         <div>
@@ -203,7 +215,7 @@ const Home: NextPage = () => {
                   <label htmlFor="docName">Nombre del Documento:</label>
                   <input type="text" id="docName" name="name" required />
               </div>
-              <button type="submit">Verificar Autenticidad</button>
+              <button type="submit" disabled={!Hash}>Verificar Autenticidad</button>
           </form>
           <div>
               {verificationResult && <div>{verificationResult}</div>}

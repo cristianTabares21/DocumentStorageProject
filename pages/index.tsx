@@ -6,14 +6,19 @@ import { useAccount, useReadContract , useWriteContract } from 'wagmi';
 import { FormEvent, useEffect, useState } from 'react';
 import { Span } from 'next/dist/trace';
 import contract from "../contract.json";
+import { keccak256 } from 'js-sha3';
 
 const Home: NextPage = () => {
   const account = useAccount()
   const [userAddress, setUserSAddress] = useState<String>("");
   const { writeContract } = useWriteContract()
 
-  const [Name, setName] = useState("");
-  const [Hash, setHash] = useState("");
+  const [Name, setName] = useState<string>("");
+  const [Hash, setFileHash] = useState<string>("");
+
+  const [verificationResult, setVerificationResult] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
 
   const { refetch } = useReadContract({
     abi: contract.abi,
@@ -21,7 +26,6 @@ const Home: NextPage = () => {
     functionName: 'verifyDocument',
     args: [Name, Hash, userAddress],
   })
-
 
   useEffect(() => {
     if(account.address){
@@ -32,29 +36,88 @@ const Home: NextPage = () => {
     }
   }, [account]); 
 
+  const handleFileSelect = async () => {
+    // Crear un input de tipo archivo en tiempo de ejecución
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const arrayBuffer = event.target.result;
+                const hash = keccak256(new Uint8Array(arrayBuffer));
+                setFileHash(hash);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+    };
+    input.click(); // Abre el diálogo de selección de archivo
+  };
+
   const uploadDocument = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const newName = event.target[0].value.trim();
+    const newType = event.target[1].value.trim();
+    const newOwner = event.target[2].value.trim();
+
+    // Validación básica
+    if (!newName || !newType || !Hash || !newOwner) {
+        setErrorMessage("Todos los campos son obligatorios y deben contener el hash del archivo.");
+        return;
+    }
+    const result = await writeContract({
+        abi: contract.abi,
+        address: contract.addressFuji as `0x${string}`,
+        functionName: 'uploadNewDocument',
+        args: [newName, newType, Hash, newOwner],
+    });
+    console.log('Documento subido correctamente:', result);
+    alert('Documento subido exitosamente!');
+  }
+
+  const updateDocument = async (event: FormEvent<HTMLFormElement>) => {
     //code
     event.preventDefault()
     const newName = event.target[0].value;
-    const newType = event.target[1].value;
-    const newHash = event.target[2].value;
-    const newOwner = event.target[3].value;
     writeContract({ 
       abi: contract.abi,
       address: contract.addressFuji as `0x${string}`,
-      functionName: 'uploadNewDocument',
-      args: [newName, newType, newHash, newOwner],
+      functionName: 'updateDocument',
+      args: [newName, Hash],
    })
-  } 
+  }
 
   const verifyDocument = async (event: FormEvent<HTMLFormElement>) => {
-    //code
-    event.preventDefault()
+    event.preventDefault();
+
     setName(event.target[0].value);
-    setHash(event.target[1].value);
-    const result = await refetch();
-    console.log(result.error);
-  }
+
+    if (!Name || !Hash) {
+        setErrorMessage("Todos los campos son obligatorios para verificar un documento.");
+        return;  // Detiene la función si los campos no están completos.
+    }
+    // Limpiar mensajes de error previos
+    setErrorMessage(null);
+
+    const result = await refetch(); 
+    if (result.error) {
+        console.error('Error al verificar documento:', result.error);
+        setErrorMessage("Error: No eres el dueño del documento o no existe.");
+        return;
+    }
+    else {
+      if (result.data === true) {
+        setVerificationResult("Documento verificado: Es el documento original.");
+      }
+      else {
+        setVerificationResult("Documento verificado: El documento no es original.");
+      }
+    }
+    
+  };
+
   return (
     <div className={styles.container}>
       <Head>
@@ -74,69 +137,65 @@ const Home: NextPage = () => {
   {userAddress !== "" && (
     <>
       <span>El usuario {userAddress} se ha conectado satisfactoriamente</span>
-      
+
+      <button onClick={handleFileSelect}>Selecciona un archivo</button>
+
       <div>
         <h1>Subir un archivo</h1>
         <form onSubmit={uploadDocument}>
+            <div>
+                <label htmlFor="name">Nombre del Archivo:</label>
+                <input type="text" name="name" id="name" required />
+            </div>
+            <div>
+                <label htmlFor="type">Tipo del Archivo:</label>
+                <input type="text" name="type" id="type" required />
+            </div>
+            <div>
+                <label htmlFor="owner">Dueño del Archivo:</label>
+                <input type="text" name="owner" id="owner" required />
+            </div>
+            <button type="submit" disabled={!Hash}>Sube el archivo</button>
+        </form>
+      </div>
+
+        <div>
+        <h1>Actualiza un documento</h1>
+        <form onSubmit={updateDocument}>
           <div>
             Digita el nombre del archivo
             <br />
             <input type="text" name="name" />
           </div>
-          <div>
-            Digita el tipo del archivo
-            <br />
-            <input type="text" name="type" />
-          </div>
-          <div>
-            Digita el hash del archivo
-            <br />
-            <input type="text" name="hash" />
-          </div>
-          <div>
-            Digita el dueño del archivo
-            <br />
-            <input type="text" name="owner" />
-          </div>
-          <button type="submit">Sube el archivo</button>
+          <button type="submit">Actualizar documento</button>
         </form>
         </div>
 
         <div>
-        <h1>Verificar si es original</h1>
-        <form onSubmit={verifyDocument}>
+          <h1>Verifica un documento</h1>
+          <form onSubmit={verifyDocument}>
+              <div>
+                  <label htmlFor="docName">Nombre del Documento:</label>
+                  <input type="text" id="docName" name="name" required />
+              </div>
+              <button type="submit">Verificar Autenticidad</button>
+          </form>
           <div>
-            Digita el nombre del archivo
-            <br />
-            <input type="text" name="name" />
+              {verificationResult && <div>{verificationResult}</div>}
+              {errorMessage && <div style={{ color: 'red' }}>{errorMessage}</div>}
           </div>
-          <div>
-            Digita el hash del archivo a verificar
-            <br />
-            <input type="text" name="hash" />
-          </div>
-          <button type="submit">Verificar Autenticidad</button>
-        </form>
         </div>
         </>
         )}
       </div>
 
-
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.tsx</code>
-        </p>
-
       </main>
-
-      <footer className={styles.footer}>
-        <a href="https://rainbow.me" rel="noopener noreferrer" target="_blank">
-          Made with ❤️ by your frens at 🌈
-        </a>
-      </footer>
     </div>
   );
 };
 
 export default Home;
+function setFileHash(hash: string) {
+  throw new Error('Function not implemented.');
+}
+

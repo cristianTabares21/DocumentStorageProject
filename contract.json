@@ -1,7 +1,7 @@
 {
-    "superAdmin": "0xD187e06BC72d974d90B7e5E65689491535b1a438",
-    "addressFuji": "0xd6A4B5E9F6CdcE17FB2a28674dDd4640CFD783B7",
-    "abi":[
+    "superAdmin": "0xEac88189BFa378e9BD905c4Ca9a54C0c91C7240E",
+    "addressFuji": "0xBf59E105D0FEA94A33290A78D4DEF5ef1276650F",
+    "abi": [
         {
             "inputs": [],
             "stateMutability": "nonpayable",
@@ -60,24 +60,6 @@
                 }
             ],
             "name": "updateDocument",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "string",
-                    "name": "name",
-                    "type": "string"
-                },
-                {
-                    "internalType": "address",
-                    "name": "newOwner",
-                    "type": "address"
-                }
-            ],
-            "name": "updateDocumentOwner",
             "outputs": [],
             "stateMutability": "nonpayable",
             "type": "function"

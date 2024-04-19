@@ -117,6 +117,7 @@ const Home: NextPage = () => {
 
     const formData = new FormData(event.currentTarget);
     const newName = formData.get('name');
+    setName(newName as string);
 
     if (!Name || !Hash) {
         setErrorMessage("Todos los campos son obligatorios para verificar un documento.");
@@ -124,7 +125,6 @@ const Home: NextPage = () => {
     }
     // Limpiar mensajes de error previos
     setErrorMessage(null);
-    setName(newName as string);
     const result = await refetch(); 
     if (result.error) {
         setErrorMessage("Error: No eres el dueño del documento o no existe.");

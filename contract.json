@@ -1,0 +1,143 @@
+{
+    "superAdmin": "0xD187e06BC72d974d90B7e5E65689491535b1a438",
+    "addressFuji": "0xd6A4B5E9F6CdcE17FB2a28674dDd4640CFD783B7",
+    "abi":[
+        {
+            "inputs": [],
+            "stateMutability": "nonpayable",
+            "type": "constructor"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "newMember",
+                    "type": "address"
+                }
+            ],
+            "name": "addMemberToWhiteList",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "member",
+                    "type": "address"
+                }
+            ],
+            "name": "delMemberToWhiteList",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "owner",
+            "outputs": [
+                {
+                    "internalType": "address",
+                    "name": "",
+                    "type": "address"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "string",
+                    "name": "name",
+                    "type": "string"
+                },
+                {
+                    "internalType": "string",
+                    "name": "newHash",
+                    "type": "string"
+                }
+            ],
+            "name": "updateDocument",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "string",
+                    "name": "name",
+                    "type": "string"
+                },
+                {
+                    "internalType": "address",
+                    "name": "newOwner",
+                    "type": "address"
+                }
+            ],
+            "name": "updateDocumentOwner",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "string",
+                    "name": "_name",
+                    "type": "string"
+                },
+                {
+                    "internalType": "string",
+                    "name": "_docType",
+                    "type": "string"
+                },
+                {
+                    "internalType": "string",
+                    "name": "_documentHash",
+                    "type": "string"
+                },
+                {
+                    "internalType": "address",
+                    "name": "_documentOwner",
+                    "type": "address"
+                }
+            ],
+            "name": "uploadNewDocument",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "string",
+                    "name": "name",
+                    "type": "string"
+                },
+                {
+                    "internalType": "string",
+                    "name": "hashToVerify",
+                    "type": "string"
+                },
+                {
+                    "internalType": "address",
+                    "name": "docOwner",
+                    "type": "address"
+                }
+            ],
+            "name": "verifyDocument",
+            "outputs": [
+                {
+                    "internalType": "bool",
+                    "name": "",
+                    "type": "bool"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        }
+    ]
+}

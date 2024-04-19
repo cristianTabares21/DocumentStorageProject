@@ -2,8 +2,59 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import styles from '../styles/Home.module.css';
+import { useAccount, useReadContract , useWriteContract } from 'wagmi';
+import { FormEvent, useEffect, useState } from 'react';
+import { Span } from 'next/dist/trace';
+import contract from "../contract.json";
 
 const Home: NextPage = () => {
+  const account = useAccount()
+  const [userAddress, setUserSAddress] = useState<String>("");
+  const { writeContract } = useWriteContract()
+
+  const [Name, setName] = useState("");
+  const [Hash, setHash] = useState("");
+
+  const { refetch } = useReadContract({
+    abi: contract.abi,
+    address: contract.addressFuji as `0x${string}`,
+    functionName: 'verifyDocument',
+    args: [Name, Hash, userAddress],
+  })
+
+
+  useEffect(() => {
+    if(account.address){
+      setUserSAddress(account.address);
+      console.log({ account: account.address });
+    }else{
+      setUserSAddress("");
+    }
+  }, [account]); 
+
+  const uploadDocument = async (event: FormEvent<HTMLFormElement>) => {
+    //code
+    event.preventDefault()
+    const newName = event.target[0].value;
+    const newType = event.target[1].value;
+    const newHash = event.target[2].value;
+    const newOwner = event.target[3].value;
+    writeContract({ 
+      abi: contract.abi,
+      address: contract.addressFuji as `0x${string}`,
+      functionName: 'uploadNewDocument',
+      args: [newName, newType, newHash, newOwner],
+   })
+  } 
+
+  const verifyDocument = async (event: FormEvent<HTMLFormElement>) => {
+    //code
+    event.preventDefault()
+    setName(event.target[0].value);
+    setHash(event.target[1].value);
+    const result = await refetch();
+    console.log(result.error);
+  }
   return (
     <div className={styles.container}>
       <Head>
@@ -18,58 +69,65 @@ const Home: NextPage = () => {
       <main className={styles.main}>
         <ConnectButton />
 
-        <h1 className={styles.title}>
-          Welcome to <a href="">RainbowKit</a> + <a href="">wagmi</a> +{' '}
-          <a href="https://nextjs.org">Next.js!</a>
-        </h1>
+        <h1>Document Storage</h1>
+        <div>
+  {userAddress !== "" && (
+    <>
+      <span>El usuario {userAddress} se ha conectado satisfactoriamente</span>
+      
+      <div>
+        <h1>Subir un archivo</h1>
+        <form onSubmit={uploadDocument}>
+          <div>
+            Digita el nombre del archivo
+            <br />
+            <input type="text" name="name" />
+          </div>
+          <div>
+            Digita el tipo del archivo
+            <br />
+            <input type="text" name="type" />
+          </div>
+          <div>
+            Digita el hash del archivo
+            <br />
+            <input type="text" name="hash" />
+          </div>
+          <div>
+            Digita el dueño del archivo
+            <br />
+            <input type="text" name="owner" />
+          </div>
+          <button type="submit">Sube el archivo</button>
+        </form>
+        </div>
+
+        <div>
+        <h1>Verificar si es original</h1>
+        <form onSubmit={verifyDocument}>
+          <div>
+            Digita el nombre del archivo
+            <br />
+            <input type="text" name="name" />
+          </div>
+          <div>
+            Digita el hash del archivo a verificar
+            <br />
+            <input type="text" name="hash" />
+          </div>
+          <button type="submit">Verificar Autenticidad</button>
+        </form>
+        </div>
+        </>
+        )}
+      </div>
+
 
         <p className={styles.description}>
           Get started by editing{' '}
           <code className={styles.code}>pages/index.tsx</code>
         </p>
 
-        <div className={styles.grid}>
-          <a className={styles.card} href="https://rainbowkit.com">
-            <h2>RainbowKit Documentation &rarr;</h2>
-            <p>Learn how to customize your wallet connection flow.</p>
-          </a>
-
-          <a className={styles.card} href="https://wagmi.sh">
-            <h2>wagmi Documentation &rarr;</h2>
-            <p>Learn how to interact with Ethereum.</p>
-          </a>
-
-          <a
-            className={styles.card}
-            href="https://github.com/rainbow-me/rainbowkit/tree/main/examples"
-          >
-            <h2>RainbowKit Examples &rarr;</h2>
-            <p>Discover boilerplate example RainbowKit projects.</p>
-          </a>
-
-          <a className={styles.card} href="https://nextjs.org/docs">
-            <h2>Next.js Documentation &rarr;</h2>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a
-            className={styles.card}
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-          >
-            <h2>Next.js Examples &rarr;</h2>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            className={styles.card}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          >
-            <h2>Deploy &rarr;</h2>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
       </main>
 
       <footer className={styles.footer}>

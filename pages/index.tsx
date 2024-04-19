@@ -82,7 +82,7 @@ const Home: NextPage = () => {
         });
         alert('Documento subido exitosamente!');
     } catch (error) {
-        setErrorMessage("Error al subir el documento: " + error)
+      setErrorMessage('Error al subir el documento o no estas autorizado');
     }
   }
 
@@ -92,14 +92,25 @@ const Home: NextPage = () => {
     const formData = new FormData(event.currentTarget);
     const newName = formData.get('name');
 
-    writeContract({ 
-      abi: contract.abi,
-      address: contract.addressFuji as `0x${string}`,
-      functionName: 'updateDocument',
-      args: [newName, Hash],
-   })
-}
+    // Validación básica
+    if (!newName || !Hash) {
+        setErrorMessage("Todos los campos son obligatorios y deben contener el hash del archivo.");
+        return;
+    }
 
+    try {
+        await writeContract({ 
+          abi: contract.abi,
+          address: contract.addressFuji as `0x${string}`,
+          functionName: 'updateDocument',
+          args: [newName, Hash],
+       })
+       alert('Documento actualizado exitosamente!');
+       setErrorMessage(null); // Limpiar el mensaje de error
+    } catch (error) {
+        setErrorMessage('Error al actualizar el documento o no estas autorizado');
+    }
+  }
 
   const verifyDocument = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -113,10 +124,9 @@ const Home: NextPage = () => {
     }
     // Limpiar mensajes de error previos
     setErrorMessage(null);
-
+    setName(newName as string);
     const result = await refetch(); 
     if (result.error) {
-        console.error('Error al verificar documento:', result.error);
         setErrorMessage("Error: No eres el dueño del documento o no existe.");
         return;
     }
@@ -153,35 +163,34 @@ const Home: NextPage = () => {
 
       <button onClick={handleFileSelect}>Selecciona un archivo</button>
 
-      <div>
-        <h1>Subir un archivo</h1>
-        <form onSubmit={uploadDocument}>
-            <div>
-                <label htmlFor="name">Nombre del Archivo:</label>
-                <input type="text" name="name" id="name" required />
-            </div>
-            <div>
-                <label htmlFor="type">Tipo del Archivo:</label>
-                <input type="text" name="type" id="type" required />
-            </div>
-            <div>
-                <label htmlFor="owner">Dueño del Archivo:</label>
-                <input type="text" name="owner" id="owner" required />
-            </div>
-            <button type="submit" disabled={!Hash}>Sube el archivo</button>
-        </form>
-      </div>
+        <div>
+          <h1>Subir un archivo</h1>
+          <form onSubmit={uploadDocument}>
+              <div>
+                  <label htmlFor="name">Nombre del Archivo:</label>
+                  <input type="text" name="name" id="name" required />
+              </div>
+              <div>
+                  <label htmlFor="type">Tipo del Archivo:</label>
+                  <input type="text" name="type" id="type" required />
+              </div>
+              <div>
+                  <label htmlFor="owner">Dueño del Archivo:</label>
+                  <input type="text" name="owner" id="owner" required />
+              </div>
+              <button type="submit" disabled={!Hash}>Sube el archivo</button>
+          </form>
+        </div>
 
         <div>
-        <h1>Actualiza un documento</h1>
-        <form onSubmit={updateDocument}>
-          <div>
-            Digita el nombre del archivo
-            <br />
-            <input type="text" name="name" />
-          </div>
-          <button type="submit">Actualizar documento</button>
-        </form>
+          <h1>Actualiza un documento</h1>
+          <form onSubmit={updateDocument}>
+            <div>
+              <label htmlFor="docName">Nombre del Documento:</label>
+              <input type="text" id="docName" name="name" required />
+            </div>
+            <button type="submit">Actualizar documento</button>
+          </form>
         </div>
 
         <div>
@@ -197,10 +206,10 @@ const Home: NextPage = () => {
               {verificationResult && <div>{verificationResult}</div>}
               {errorMessage && <div style={{ color: 'red' }}>{errorMessage}</div>}
           </div>
+          </div>
+          </>
+          )}
         </div>
-        </>
-        )}
-      </div>
 
       </main>
     </div>
